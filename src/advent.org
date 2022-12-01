@@ -1,0 +1,202 @@
+#+title: Advent
+
+
+* Dependencies
+
+** Set up Org, Babel and CIDER
+
+https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-clojure.html
+These should all match local Emacs configuration, just adding here for visibility
+
+Org mode and Clojure
+#+begin_src emacs-lisp
+
+(require 'org)
+(require 'ob-clojure)
+(setq org-babel-clojure-backend 'cider)
+(require 'cider)
+
+#+end_src
+
+#+RESULTS:
+: cider
+
+** Launch REPL
+
+#+begin_example
+M-x cider-jack-in RET
+#+end_example
+
+** Test REPL / Babel connection
+
+#+begin_src clojure
+
+(def derp "test def")
+
+#+end_src
+
+#+RESULTS:
+: #'adventofcode2022.core/derp
+
+#+begin_src clojure
+(str derp)
+#+end_src
+
+#+RESULTS:
+: test def
+
+* Utility Functions
+
+Input file download
+
+#+begin_src clojure
+
+
+(ns aoc)
+(require '[clojure.java.io :as io])
+
+
+(def year 2022)
+
+(def input-file-directory "/Users/mmatsen/projects/adventofcode2022/inputs/")
+
+(defn input-file-vec
+  [day]
+  (with-open [rdr (io/reader (str input-file-directory day ".txt"))]
+              (vec (line-seq rdr))
+  )
+  )
+
+
+#+end_src
+
+#+RESULTS:
+| #'aoc/year                 |
+| #'aoc/input-file-directory |
+| #'aoc/input-file-vec       |
+
+* Solutions
+
+** Day 1
+
+#+begin_quote
+--- Day 1: Calorie Counting ---
+Santa's reindeer typically eat regular reindeer food, but they need a lot of magical energy to deliver presents on Christmas. For that, their favorite snack is a special type of star fruit that only grows deep in the jungle. The Elves have brought you on their annual expedition to the grove where the fruit grows.
+
+To supply enough magical energy, the expedition needs to retrieve a minimum of fifty stars by December 25th. Although the Elves assure you that the grove has plenty of fruit, you decide to grab any fruit you see along the way, just in case.
+
+Collect stars by solving puzzles. Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants one star. Good luck!
+
+The jungle must be too overgrown and difficult to navigate in vehicles or access from the air; the Elves' expedition traditionally goes on foot. As your boats approach land, the Elves begin taking inventory of their supplies. One important consideration is food - in particular, the number of Calories each Elf is carrying (your puzzle input).
+
+The Elves take turns writing down the number of Calories contained by the various meals, snacks, rations, etc. that they've brought with them, one item per line. Each Elf separates their own inventory from the previous Elf's inventory (if any) by a blank line.
+
+For example, suppose the Elves finish writing their items' Calories and end up with the following list:
+
+1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000
+This list represents the Calories of the food carried by five Elves:
+
+The first Elf is carrying food with 1000, 2000, and 3000 Calories, a total of 6000 Calories.
+The second Elf is carrying one food item with 4000 Calories.
+The third Elf is carrying food with 5000 and 6000 Calories, a total of 11000 Calories.
+The fourth Elf is carrying food with 7000, 8000, and 9000 Calories, a total of 24000 Calories.
+The fifth Elf is carrying one food item with 10000 Calories.
+In case the Elves get hungry and need extra snacks, they need to know which Elf to ask: they'd like to know how many Calories are being carried by the Elf carrying the most Calories. In the example above, this is 24000 (carried by the fourth Elf).
+
+Find the Elf carrying the most Calories. How many total Calories is that Elf carrying?
+#+end_quote
+
+
+#+begin_src clojure
+(ns day1)
+
+(def test-data-vec
+  [
+   "1000" "2000" "3000" ""
+   "4000" ""
+   "5000" "6000" ""
+   "7000" "8000" "9000" ""
+   "10000"
+   ])
+
+(defn get-food-groups
+  [data]
+  (loop
+      [d data
+       acc nil
+       groups nil]
+    (let [n (first d)]
+         (cond
+           (nil? n) (conj groups acc)
+           (empty? n) (recur (next d) nil (conj groups acc))
+           :else (recur (next d) (conj acc n) groups)))))
+
+
+(defn calorie-sum
+  [foods]
+  (apply + (map #(Integer/parseInt %) foods)))
+
+(defn elf-with-most-calories
+  [food-groups]
+  (apply max (map calorie-sum food-groups)))
+
+(defn part1-solution
+  [data]
+  (-> data
+     (get-food-groups)
+     (elf-with-most-calories)))
+
+#+end_src
+
+#+RESULTS:
+| #'day1/test-data-vec          |
+| #'day1/get-food-groups        |
+| #'day1/calorie-sum            |
+| #'day1/elf-with-most-calories |
+| #'day1/part1-solution         |
+
+#+begin_quote
+
+By the time you calculate the answer to the Elves' question, they've already realized that the Elf carrying the most Calories of food might eventually run out of snacks.
+
+To avoid this unacceptable situation, the Elves would instead like to know the total Calories carried by the top three Elves carrying the most Calories. That way, even if one of those Elves runs out of snacks, they still have two backups.
+
+In the example above, the top three Elves are the fourth Elf (with 24000 Calories), then the third Elf (with 11000 Calories), then the fifth Elf (with 10000 Calories). The sum of the Calories carried by these three elves is 45000.
+
+Find the top three Elves carrying the most Calories. How many Calories are those Elves carrying in total?
+
+
+#+end_quote
+
+#+begin_src clojure
+(ns day1)
+
+(defn top-three-elves
+  [calorie-sums]
+  (take 3 (reverse (sort calorie-sums))))
+
+(defn part2-solution
+       [data]
+       (as-> data v
+           (get-food-groups v)
+           (map calorie-sum v)
+           (top-three-elves v)
+           (apply + v)))
+#+end_src
+
+#+RESULTS:
+| #'day1/top-three-elves |
+| #'day1/part2-solution  |
