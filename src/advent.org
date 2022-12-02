@@ -3,10 +3,19 @@
 
 * Dependencies
 
-** Set up Org, Babel and CIDER
+** Set up Org, Babel and cider
 
 https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-clojure.html
 These should all match local Emacs configuration, just adding here for visibility
+
+#+begin_src emacs-lisp
+
+(org-toggle-inline-images)
+
+
+#+end_src
+
+#+RESULTS:
 
 Org mode and Clojure
 #+begin_src emacs-lisp
@@ -200,3 +209,209 @@ Find the top three Elves carrying the most Calories. How many Calories are those
 #+RESULTS:
 | #'day1/top-three-elves |
 | #'day1/part2-solution  |
+
+Fun with Incanter
+
+#+begin_src clojure
+
+(ns day1)
+
+(use '(incanter core stats charts io))
+
+(def my-plot (function-plot sin -10 10))
+;(view my-plot)
+
+(save my-plot "./images/test-plot.png")
+
+#+end_src
+
+#+RESULTS:
+: #'day1/my-plot
+
+
+
+** Day 2
+
+#+begin_quote
+The Elves begin to set up camp on the beach. To decide whose tent gets to be closest to the snack storage, a giant Rock Paper Scissors tournament is already in progress.
+
+Rock Paper Scissors is a game between two players. Each game contains many rounds; in each round, the players each simultaneously choose one of Rock, Paper, or Scissors using a hand shape. Then, a winner for that round is selected: Rock defeats Scissors, Scissors defeats Paper, and Paper defeats Rock. If both players choose the same shape, the round instead ends in a draw.
+
+Appreciative of your help yesterday, one Elf gives you an encrypted strategy guide (your puzzle input) that they say will be sure to help you win. "The first column is what your opponent is going to play: A for Rock, B for Paper, and C for Scissors. The second column--" Suddenly, the Elf is called away to help with someone's tent.
+
+The second column, you reason, must be what you should play in response: X for Rock, Y for Paper, and Z for Scissors. Winning every time would be suspicious, so the responses must have been carefully chosen.
+
+The winner of the whole tournament is the player with the highest score. Your total score is the sum of your scores for each round. The score for a single round is the score for the shape you selected (1 for Rock, 2 for Paper, and 3 for Scissors) plus the score for the outcome of the round (0 if you lost, 3 if the round was a draw, and 6 if you won).
+
+Since you can't be sure if the Elf is trying to help you or trick you, you should calculate the score you would get if you were to follow the strategy guide.
+
+For example, suppose you were given the following strategy guide:
+
+A Y
+B X
+C Z
+This strategy guide predicts and recommends the following:
+
+In the first round, your opponent will choose Rock (A), and you should choose Paper (Y). This ends in a win for you with a score of 8 (2 because you chose Paper + 6 because you won).
+In the second round, your opponent will choose Paper (B), and you should choose Rock (X). This ends in a loss for you with a score of 1 (1 + 0).
+The third round is a draw with both players choosing Scissors, giving you a score of 3 + 3 = 6.
+In this example, if you were to follow the strategy guide, you would get a total score of 15 (8 + 1 + 6).
+
+What would your total score be if everything goes exactly according to your strategy guide?
+
+
+#+end_quote
+
+#+begin_src clojure
+
+(ns day2)
+(def test-data-vec ["A Y" "B X" "C Z"])
+
+(def moves #{:ROCK :PAPER :SCISSORS})
+(def moves-vec [:ROCK :PAPER :SCISSORS])
+(def outcomes #{:WIN :LOSS :TIE})
+
+(defn letter-to-move
+  [l]
+  (case l
+    \A :ROCK
+    \B :PAPER
+    \C :SCISSORS
+    \X :ROCK
+    \Y :PAPER
+    \Z :SCISSORS
+    )
+  )
+
+(defn get-outcome
+  [round]
+  (let [mine (:mine round) theirs (:theirs round)]
+    (cond
+      (= mine theirs) :TIE
+      (and (= mine :ROCK) (= theirs :SCISSORS)) :WIN
+      (and (= mine :PAPER) (= theirs :ROCK)) :WIN
+      (and (= mine :SCISSORS) (= theirs :PAPER)) :WIN
+      :else :LOSS
+      )
+    )
+  )
+
+(defn score-move
+  [move]
+  (case move
+      :ROCK 1
+      :PAPER 2
+      :SCISSORS 3))
+
+(defn score-outcome
+  [outcome]
+  (case outcome
+      :WIN 6
+      :TIE 3
+      :LOSS 0 ))
+
+(defn row-to-round
+  [row]
+  {:mine (letter-to-move (last row)) :theirs (letter-to-move (first row))}
+  )
+
+(defn score-round
+  [round]
+  (let [outcome (get-outcome round)]
+    (assoc round
+           :outcome outcome
+           :score (+ (score-move (:mine round)) (score-outcome outcome))
+           )
+    )
+  )
+
+(defn part1-solution
+  [data]
+  (->> data
+       (map row-to-round)
+   (map score-round)
+       (map :score)
+   (apply +)
+       )
+  )
+
+
+#+end_src
+
+#+RESULTS:
+| #'day2/test-data-vec  |
+| #'day2/moves          |
+| #'day2/moves-vec      |
+| #'day2/outcomes       |
+| #'day2/letter-to-move |
+| #'day2/get-outcome    |
+| #'day2/score-move     |
+| #'day2/score-outcome  |
+| #'day2/row-to-round   |
+| #'day2/score-round    |
+| #'day2/part1-solution |
+#+begin_quote
+The Elf finishes helping with the tent and sneaks back over to you. "Anyway, the second column says how the round needs to end: X means you need to lose, Y means you need to end the round in a draw, and Z means you need to win. Good luck!"
+
+The total score is still calculated in the same way, but now you need to figure out what shape to choose so the round ends as indicated. The example above now goes like this:
+
+In the first round, your opponent will choose Rock (A), and you need the round to end in a draw (Y), so you also choose Rock. This gives you a score of 1 + 3 = 4.
+In the second round, your opponent will choose Paper (B), and you choose Rock so you lose (X) with a score of 1 + 0 = 1.
+In the third round, you will defeat your opponent's Scissors with Rock for a score of 1 + 6 = 7.
+Now that you're correctly decrypting the ultra top secret strategy guide, you would get a total score of 12.
+
+Following the Elf's instructions for the second column, what would your total score be if everything goes exactly according to your strategy guide?
+
+
+#+end_quote
+
+#+begin_src clojure
+
+(defn letter-to-outcome
+  [l]
+  (case l
+    \X :LOSS
+    \Y :TIE
+    \Z :WIN
+  )
+)
+
+(defn get-all-move-combinations
+  [moves]
+  (for [a moves b moves]
+    {:mine a :theirs b}
+    )
+  )
+
+
+(def all-round-outcomes
+  (map score-round (get-all-move-combinations moves-vec)))
+
+;; find completed round where all fields from round are present
+;; basically subset for maps. surely this is already in clojure core somewhere?
+(defn find-complete-round
+  [round]
+  (first (filter #(clojure.set/subset? (set round) (set %)) all-round-outcomes)))
+
+(defn row-to-round-part2
+  [row]
+  {:theirs (letter-to-move (first row)) :outcome (letter-to-outcome (last row))})
+
+(defn part2-solution
+  [data]
+  (->> data
+       (map row-to-round-part2)
+       (map find-complete-round)
+       (map :score)
+       (apply +)
+       ))
+
+#+end_src
+
+#+RESULTS:
+| #'day2/letter-to-outcome         |
+| #'day2/get-all-move-combinations |
+| #'day2/all-round-outcomes        |
+| #'day2/find-complete-round       |
+| #'day2/row-to-round-part2        |
+| #'day2/part2-solution            |
