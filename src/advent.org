@@ -777,12 +777,6 @@ After the rearrangement procedure completes, what crate ends up on top of each s
 
 #+begin_src clojure
 
-; get list of drawing lines from input (take-while)
-; pad lines to max length
-; partition to get just crate letters and col numbers (partition x y z)
-; rotate matrix
-; state = list of lists (stacks)
-
 (ns day5)
 
 (def test-data-vec [
@@ -889,16 +883,14 @@ After the rearrangement procedure completes, what crate ends up on top of each s
   (loop
       [commands orig-commands
        state orig-state]
-    ;(println "class of commands:" (class commands))
-    ;(println "class of state: " (class state))
-    (println "command to run: " (peek commands))
-    (println "state: " state)
+    ;(println "command to run: " (peek commands))
+    ;(println "state: " state)
 
     (if
       (not-empty commands)
       (recur (pop commands) (run-command (peek commands) state))
       (do
-        (println "final state in run-commands: " state)
+        ;(println "final state in run-commands: " state)
         state
     )
   )
@@ -915,20 +907,11 @@ After the rearrangement procedure completes, what crate ends up on top of each s
         starting-state (get-crate-starting-state stacks-vec)
         starting-commands (get-commands-from-command-vec commands-vec)
         ]
-    ;(whats-on-top (run-commands starting-commands starting-state))
-    (println (class stacks-vec) stacks-vec)
-    (println (class starting-state) starting-state)
-    (println (class starting-commands) starting-commands)
     (whats-on-top (run-commands starting-commands starting-state)
 
 )
 )
   )
-
-
-
-;parse commands
-; split, map parseint, map w/keys
 
 #+end_src
 
@@ -1003,15 +986,13 @@ Before the rearrangement process finishes, update your simulation so that the El
   (loop
       [commands orig-commands
        state orig-state]
-    (println "class of commands:" (class commands))
-    (println "class of state: " (class state))
-    (println "command to run: " (peek commands))
-    (println "state: " state)
+    ;(println "command to run: " (peek commands))
+    ;(println "state: " state)
     (if
       (not-empty commands)
       (recur (pop commands) (command-fn (peek commands) state))
       (do
-        (println "final state in run-commands: " state)
+        ;(println "final state in run-commands: " state)
         state
         )
       )
@@ -1030,7 +1011,6 @@ Before the rearrangement process finishes, update your simulation so that the El
         from-left (subvec from-vec 0 (- from-count num))
         to-move (subvec from-vec (- from-count num))
         ]
-    ;(println "current state in multi: " v)
     (assoc v
            from-idx (subvec from-vec 0 (- from-count num))
            to-idx (into [] (concat to-vec to-move)))))
@@ -1041,10 +1021,6 @@ Before the rearrangement process finishes, update your simulation so that the El
         starting-state (get-crate-starting-state stacks-vec)
         starting-commands (get-commands-from-command-vec commands-vec)
         ]
-    ;(whats-on-top (run-commands starting-commands starting-state))
-    (println (class stacks-vec) stacks-vec)
-    (println (class starting-state) starting-state)
-    (println (class starting-commands) starting-commands)
     (whats-on-top (run-commands-dyn starting-commands starting-state run-command-multi))
 )
   )
